@@ -1,21 +1,42 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import Enum
 
 from engine.ecs import EntityId
 
+
+# ---------------------------------------------------------------------------
+# Fog of War state – lives here to avoid circular imports with engine/fog.py
+# ---------------------------------------------------------------------------
+
+class FogState(Enum):
+    UNKNOWN = 0   # Never seen – rendered black
+    SEEN = 1      # Previously seen – rendered darkened
+    VISIBLE = 2   # Currently visible – rendered normally
+
+
+# ---------------------------------------------------------------------------
+# Terrain
+# ---------------------------------------------------------------------------
 
 @dataclass
 class TerrainType:
     name: str
     passable: bool
+    vision_blocking: bool
     color: tuple[int, int, int]
 
+
+# ---------------------------------------------------------------------------
+# Cell and Grid
+# ---------------------------------------------------------------------------
 
 @dataclass
 class Cell:
     terrain_type: TerrainType
     entity_id: EntityId | None = None
+    fog_state: FogState = FogState.UNKNOWN
 
 
 class Grid:
@@ -38,6 +59,9 @@ class Grid:
 
     def remove_entity(self, col: int, row: int) -> None:
         self._cells[row][col].entity_id = None
+
+    def set_fog_state(self, col: int, row: int, state: FogState) -> None:
+        self._cells[row][col].fog_state = state
 
     def in_bounds(self, col: int, row: int) -> bool:
         return 0 <= col < self.cols and 0 <= row < self.rows

@@ -35,3 +35,8 @@ class World:
 
     def get_all(self, component_type: Type[T]) -> dict[EntityId, T]:
         return self._components.get(component_type, {})  # type: ignore[return-value]
+
+    def destroy_entity(self, entity_id: EntityId) -> None:
+        """Remove all components for an entity, effectively destroying it."""
+        for store in self._components.values():
+            store.pop(entity_id, None)
